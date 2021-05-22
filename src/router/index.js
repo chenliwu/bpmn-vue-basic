@@ -1,11 +1,12 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+
 Vue.use(Router)
 
 const routes = [{
-        path: '/',
-        redirect: '/basic'
-    },
+    path: '/',
+    redirect: '/basic'
+},
     {
         path: '/basic',
         component: () =>
@@ -35,7 +36,12 @@ const routes = [{
         path: '/event',
         component: () =>
             import ('./../components/event')
-    }
+    },
+    {
+        path: '/modelViewer',
+        component: () =>
+            import ('./../components/modelViewer')
+    },
 ]
 
 export default new Router({
