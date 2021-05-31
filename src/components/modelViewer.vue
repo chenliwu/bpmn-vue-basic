@@ -21,7 +21,7 @@ export default {
     },
     // 生命周期 - 载入后, Vue 实例挂载到实际的 DOM 操作完成，一般在该过程进行 Ajax 交互
     async mounted() {
-        this.initBpmnViewer()
+        this.initBpmnViewer();
         await this.createNewDiagram(xmlStr)
         // this.showDiagram()
     },
@@ -39,14 +39,21 @@ export default {
     methods: {
         initBpmnViewer() {
             const canvas = this.$refs.canvas
+            // 初始时清除图层
+            this.bpmnViewer && this.bpmnViewer.destroy();
+            this.$refs.canvas.innerHTML = "";
             this.bpmnViewer = new BpmnViewer({
                 container: canvas
             })
+
         },
         async createNewDiagram(modelXml) {
             try {
                 const result = await this.bpmnViewer.importXML(modelXml)
                 // this.$refs.canvas.zoom('fit-viewport', 'auto');
+                // 屏幕自适应
+                const canvas = this.bpmnViewer.get('canvas')
+                canvas.zoom('fit-viewport', 'auto')
                 const { warnings } = result
                 console.log(warnings)
             } catch (err) {
