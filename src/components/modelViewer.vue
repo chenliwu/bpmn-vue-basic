@@ -1,7 +1,9 @@
 <template>
     <div class="containers">
         <div class="canvas" ref="canvas"></div>
+        <div v-html="modelSvg"></div>
     </div>
+
 </template>
 
 
@@ -18,15 +20,19 @@ export default {
     created() {
     },
     // 生命周期 - 载入后, Vue 实例挂载到实际的 DOM 操作完成，一般在该过程进行 Ajax 交互
-    mounted() {
+    async mounted() {
         this.initBpmnViewer()
+        await this.createNewDiagram(xmlStr)
+        // this.showDiagram()
     },
     data() {
         return {
             // bpmn建模器
             bpmnModeler: null,
             container: null,
-            canvas: null
+            canvas: null,
+
+            modelSvg:'',
         }
     },
     // 方法集合
@@ -36,18 +42,51 @@ export default {
             this.bpmnViewer = new BpmnViewer({
                 container: canvas
             })
-            this.createNewDiagram(xmlStr)
-
         },
         async createNewDiagram(modelXml) {
             try {
                 const result = await this.bpmnViewer.importXML(modelXml)
-                this.$refs.canvas.zoom('fit-viewport', 'auto');
+                // this.$refs.canvas.zoom('fit-viewport', 'auto');
                 const { warnings } = result
                 console.log(warnings)
             } catch (err) {
                 console.log(err.message, err.warnings)
             }
+        },
+        showDiagram () {
+            const that = this
+            this.bpmnViewer.saveXML({ format: true }, (err, xml) => {
+                console.log('===err',err)
+                console.log('===xml',xml)
+                if (!err) {
+                    // 从建模器画布中提取svg图形标签
+                    let context = ''
+                    const djsGroupAll = this.$refs.canvas.querySelectorAll('.djs-group')
+                    for (const item of djsGroupAll) {
+                        context += item.innerHTML
+                    }
+                    console.log('context', context)
+                    // 获取svg的基本数据，长宽高
+                    const viewport = this.$refs.canvas
+                        .querySelector('.viewport')
+                        .getBBox()
+
+                    // 将标签和数据拼接成一个完整正常的svg图形
+                    const svg = `
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          xmlns:xlink="http://www.w3.org/1999/xlink"
+                          width="${viewport.width}"
+                          height="${viewport.height}"
+                          viewBox="${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}"
+                          version="1.1"
+                          >
+                          ${context}
+                        </svg>
+                      `
+                    that.modelSvg = svg
+                }
+            })
         }
     },
 // 计算属性
