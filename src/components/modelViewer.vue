@@ -1,9 +1,7 @@
 <template>
     <div class="containers">
         <div class="canvas" ref="canvas"></div>
-        <div v-html="modelSvg"></div>
     </div>
-
 </template>
 
 
@@ -11,7 +9,6 @@
 // 引入相关的依赖
 import BpmnViewer from "bpmn-js/lib/Viewer";
 import {xmlStr} from "../mock/xmlStr";
-
 
 export default {
     name: '',
@@ -30,9 +27,7 @@ export default {
             // bpmn建模器
             bpmnModeler: null,
             container: null,
-            canvas: null,
-
-            modelSvg:'',
+            canvas: null
         }
     },
     // 方法集合
@@ -50,58 +45,30 @@ export default {
         async createNewDiagram(modelXml) {
             try {
                 const result = await this.bpmnViewer.importXML(modelXml)
+                console.log('result',result)
                 // this.$refs.canvas.zoom('fit-viewport', 'auto');
                 // 屏幕自适应
                 const canvas = this.bpmnViewer.get('canvas')
                 canvas.zoom('fit-viewport', 'auto')
-                const { warnings } = result
-                console.log(warnings)
+                this.setNodeColor(['Activity_0c2cl2b'],'nodeSuccess',canvas)
             } catch (err) {
                 console.log(err.message, err.warnings)
             }
         },
-        showDiagram () {
-            const that = this
-            this.bpmnViewer.saveXML({ format: true }, (err, xml) => {
-                console.log('===err',err)
-                console.log('===xml',xml)
-                if (!err) {
-                    // 从建模器画布中提取svg图形标签
-                    let context = ''
-                    const djsGroupAll = this.$refs.canvas.querySelectorAll('.djs-group')
-                    for (const item of djsGroupAll) {
-                        context += item.innerHTML
-                    }
-                    console.log('context', context)
-                    // 获取svg的基本数据，长宽高
-                    const viewport = this.$refs.canvas
-                        .querySelector('.viewport')
-                        .getBBox()
-
-                    // 将标签和数据拼接成一个完整正常的svg图形
-                    const svg = `
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          xmlns:xlink="http://www.w3.org/1999/xlink"
-                          width="${viewport.width}"
-                          height="${viewport.height}"
-                          viewBox="${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}"
-                          version="1.1"
-                          >
-                          ${context}
-                        </svg>
-                      `
-                    that.modelSvg = svg
-                }
-            })
+        // 设置高亮颜色的class
+        setNodeColor (nodeCodes, colorClass, canvas) {
+            for (let i = 0; i < nodeCodes.length; i++) {
+                canvas.addMarker(nodeCodes[i], colorClass)
+            }
         }
     },
-// 计算属性
+    // 计算属性
     computed: {}
 }
 </script>
 
-<style scoped>
+<style>
+
 .containers {
     background-color: #ffffff;
     width: 100%;
@@ -113,10 +80,11 @@ export default {
     height: 100%;
 }
 
-.panel {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 300px;
+.nodeSuccess:not(.djs-connection) .djs-visual > :nth-child(1) {
+    stroke: red !important;
+    stroke-width: 3px;
+    /* elements as success */
 }
+
+
 </style>
